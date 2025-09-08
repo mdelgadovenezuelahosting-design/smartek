@@ -1,11 +1,8 @@
 <?php
 header('Content-Type: application/json');
 
-$host = 'localhost';
-$db   = 'smartek_system';
-$user = 'smartek_system';
-$pass = 'zblvRsYuBw9s!';
-$charset = 'utf8mb4';
+// Incluir configuración segura DESDE FUERA de public_html
+require_once '/home/smartek/smartek/config/database.php';
 
 $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -13,11 +10,18 @@ $options = [
 ];
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$db;charset=$charset", $user, $pass, $options);
+    $pdo = new PDO(
+        "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET, 
+        DB_USER, 
+        DB_PASSWORD, 
+        $options
+    );
 } catch (PDOException $e) {
+    // Log seguro del error (no exponer detalles)
+    error_log("Database connection error: " . $e->getMessage());
+    
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => 'Internal server error']);
     exit;
 }
 ?>
-
