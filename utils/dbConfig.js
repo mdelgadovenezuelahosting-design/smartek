@@ -1,16 +1,19 @@
 const mariadb = require('mariadb');
 
+// ✅ SEGURO - Importar configuración desde archivo externo
+const config = require('/home/smartek/smartek/config/node-config.js');
+
 // Pool de conexiones para MariaDB
 const pool = mariadb.createPool({
-    host: process.env.DB_HOST || 'smartek_system',
-    user: process.env.DB_USER || 'smartek_system',
-    password: process.env.DB_PASSWORD || 'zblvRsYuBw9s!',
-    database: process.env.DB_NAME || 'smartek_db',
-    connectionLimit: 10,
+    host: config.DB_HOST,
+    user: config.DB_USER,
+    password: config.DB_PASSWORD, // ← Ahora seguro
+    database: config.DB_NAME,
+    connectionLimit: config.DB_CONNECTION_LIMIT || 10,
     acquireTimeout: 60000,
     reconnect: true,
-    timeout: 30000
-    ssl: false, // Cambiar a true en producción con SSL configurado
+    timeout: 30000,
+    ssl: false,
     compress: true,
     connectTimeout: 30000
 });
