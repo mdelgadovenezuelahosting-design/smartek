@@ -1,0 +1,54 @@
+# /home/smartek/public_html/utils/.htaccess
+
+# Permitir acceso a login.php
+<Files "login.php">
+    Order allow,deny
+    Allow from all
+</Files>
+
+# PERMITIR acceso a los archivos JavaScript desde el navegador
+<Files "database.js">
+    Order allow,deny
+    Allow from all
+    # Headers para CORS
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Origin, Content-Type, Accept"
+</Files>
+
+<Files "currencyService.js">
+    Order allow,deny
+    Allow from all
+    # Headers para CORS
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Origin, Content-Type, Accept"
+</Files>
+
+# Bloquear otros archivos sensibles (como archivos de configuración)
+<Files "*.config.js">
+    Order allow,deny
+    Deny from all
+    Allow from 127.0.0.1
+    Allow from localhost
+    Allow from ::1
+</Files>
+
+# Headers CORS para todos los archivos JS
+<FilesMatch "\.js$">
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Origin, Content-Type, Accept"
+</FilesMatch>
+
+# Para archivos PHP que necesitan CORS
+<FilesMatch "\.php$">
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Origin, Content-Type, Accept, Authorization"
+</FilesMatch>
+
+# Manejar preflight OPTIONS requests
+RewriteEngine On
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^(.*)$ $1 [R=200,L]

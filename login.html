@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema de Facturación Smartek</title>
+    <link rel="stylesheet" href="css/login.css">
+    <style>
+        .message {
+            margin-top: 1rem;
+            padding: 0.8rem;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #38bdf8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 38px;
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .input-group {
+            position: relative;
+        }
+        
+        .logo {
+            max-width: 80%;
+            max-height: 80%;
+            object-fit: contain;
+            transition: opacity 0.3s;
+        }
+        
+        .logo.loading {
+            opacity: 0.7;
+        }
+        
+        .logo-error {
+            display: none;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Mitad izquierda con logo -->
+        <div class="left">
+            <img src="https://smartek.gconex.com/logo/logo.jpg" 
+                 alt="Logo Smartek" 
+                 class="logo" 
+                 id="logoImage"
+                 onload="logoLoaded()"
+                 onerror="logoError()">
+            <div class="logo-error" id="logoError">
+                Logo no disponible<br>
+                <small>Sistema de Facturación Smartek</small>
+            </div>
+        </div>
+
+        <!-- Mitad derecha con formulario -->
+        <div class="right">
+            <div class="login-box">
+                <h1>Iniciar Sesión</h1>
+                <form id="loginForm">
+                    <div class="input-group">
+                        <label for="username">Usuario</label>
+                        <input type="text" id="username" name="username" required placeholder="Ingresa tu usuario">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="password">Contraseña</label>
+                        <input type="password" id="password" name="password" required placeholder="Ingresa tu contraseña">
+                        <button type="button" class="password-toggle" onclick="togglePassword()">👁️</button>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="btn">Ingresar</button>
+                </form>
+                <div id="message" class="message"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Función para mostrar/ocultar contraseña
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleButton = document.querySelector('.password-toggle');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.textContent = '🔒';
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.textContent = '👁️';
+            }
+        }
+        
+        // Manejo del logo
+        function logoLoaded() {
+            console.log('Logo cargado correctamente');
+            document.getElementById('logoImage').classList.remove('loading');
+        }
+        
+        function logoError() {
+            console.log('Error cargando el logo');
+            document.getElementById('logoError').style.display = 'block';
+            document.getElementById('logoImage').style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const messageDiv = document.getElementById('message');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Mostrar estado de carga del logo
+            document.getElementById('logoImage').classList.add('loading');
+            
+            // Verificar si hay parámetros en la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlUser = urlParams.get('username');
+            const urlPass = urlParams.get('password');
+            
+            // Auto-rellenar si hay parámetros en la URL
+            if (urlUser) {
+                document.getElementById('username').value = urlUser;
+            }
+            
+            if (urlPass) {
+                document.getElementById('password').value = urlPass;
+            }
+            
+            // Auto-enviar si ambos parámetros están presentes
+            if (urlUser && urlPass) {
+                setTimeout(() => {
+                    loginForm.dispatchEvent(new Event('submit'));
+                }, 1000);
+            }
+
+            // Manejar envío del formulario
+            if (loginForm) {
+                loginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const username = document.getElementById('username').value;
+                    const password = document.getElementById('password').value;
+                    
+                    // Validaciones básicas
+                    if (!username || !password) {
+                        messageDiv.textContent = 'Por favor, completa todos los campos';
+                        messageDiv.className = 'message error';
+                        return;
+                    }
+                    
+                    // Mostrar loading
+                    submitBtn.innerHTML = '<div class="loading"></div> Ingresando...';
+                    submitBtn.disabled = true;
+                    
+                    try {
+                        const response = await fetch('api/login.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ username, password })
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            messageDiv.textContent = '¡Login exitoso! Redirigiendo...';
+                            messageDiv.className = 'message success';
+                            
+                            // Redirigir al dashboard después de 1 segundo
+                            setTimeout(() => {
+                                window.location.href = 'index.html';
+                            }, 1000);
+                        } else {
+                            messageDiv.textContent = result.message || 'Error en las credenciales';
+                            messageDiv.className = 'message error';
+                            resetButton();
+                        }
+                    } catch (error) {
+                        messageDiv.textContent = 'Error de conexión con el servidor. Verifica tu conexión.';
+                        messageDiv.className = 'message error';
+                        console.error('Error:', error);
+                        resetButton();
+                    }
+                });
+            }
+            
+            // Función para resetear el botón
+            function resetButton() {
+                submitBtn.innerHTML = 'Ingresar';
+                submitBtn.disabled = false;
+            }
+            
+            // Permitir login con Enter
+            document.getElementById('password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    loginForm.dispatchEvent(new Event('submit'));
+                }
+            });
+            
+            // Enfocar el campo de usuario al cargar
+            document.getElementById('username').focus();
+            
+            // Verificar si la API está disponible
+            checkAPI();
+        });
+        
+        // Verificar disponibilidad de la API
+        async function checkAPI() {
+            try {
+                const response = await fetch('api/login.php', {
+                    method: 'HEAD',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                console.log('API login.php está disponible');
+            } catch (error) {
+                console.warn('API login.php no disponible:', error);
+            }
+        }
+    </script>
+</body>
+</html>

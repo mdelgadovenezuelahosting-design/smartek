@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Sistema de Facturación Smartek</title>
+    <meta name="description" content="Sistema de facturación completo con soporte para múltiples monedas y cálculo automático de IVA">
+    <meta name="keywords" content="facturación, facturas, clientes, productos, contabilidad, IVA, bolívares, dólares">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Sistema de Facturación Smartek">
+    <meta property="og:description" content="Sistema de facturación completo con soporte para múltiples monedas y cálculo automático de IVA">
+    
+    <!-- Twitter -->
+    <meta name="twitter:title" content="Sistema de Facturación Smartek">
+    <meta name="twitter:description" content="Sistema de facturación completo con soporte para múltiples monedas y cálculo automático de IVA">
+
+    <!-- React y dependencias PRIMERO -->
+    <script src="https://resource.trickle.so/vendor_lib/unpkg/react@18/umd/react.production.min.js"></script>
+    <script src="https://resource.trickle.so/vendor_lib/unpkg/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://resource.trickle.so/vendor_lib/unpkg/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://resource.trickle.so/vendor_lib/unpkg/lucide-static@0.516.0/font/lucide.css" rel="stylesheet">
+
+    <style type="text/tailwindcss">
+    @layer theme {
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #e2e8f0;
+            --accent-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #d1d5db;
+        }
+    }
+
+    @layer base {
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f8fafc;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text-primary);
+        }
+    }
+
+    @layer components {
+        .btn {
+            @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2;
+        }
+        
+        .btn-primary {
+            @apply bg-[var(--primary-color)] text-white hover:bg-blue-700 focus:ring-blue-200;
+        }
+        
+        .btn-secondary {
+            @apply bg-[var(--secondary-color)] text-[var(--text-primary)] hover:bg-gray-300 focus:ring-gray-200;
+        }
+        
+        .btn-success {
+            @apply bg-[var(--accent-color)] text-white hover:bg-green-600 focus:ring-green-200;
+        }
+        
+        .btn-danger {
+            @apply bg-[var(--danger-color)] text-white hover:bg-red-600 focus:ring-red-200;
+        }
+        
+        .card {
+            @apply bg-white rounded-lg shadow-sm border border-[var(--border-color)] p-6;
+        }
+        
+        .input {
+            @apply w-full px-3 py-2 border border-[var(--border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-[var(--primary-color)];
+        }
+        
+        .sidebar-item {
+            @apply flex items-center px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--secondary-color)] hover:text-[var(--primary-color)] transition-colors cursor-pointer;
+        }
+        
+        .sidebar-item.active {
+            @apply bg-[var(--primary-color)] text-white;
+        }
+        
+        .auth-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+        }
+        
+        .auth-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    }
+    </style>
+
+</head>
+<body>
+    <!-- Pantalla de carga para verificación de autenticación -->
+    <div id="authLoading" class="auth-loading">
+        <div class="auth-spinner"></div>
+        <p style="margin-top: 20px;">Verificando autenticación...</p>
+    </div>
+    
+    <div id="root"></div>
+    
+    <!-- 1. SERVICIOS Y UTILIDADES (deben ir PRIMERO) -->
+    <script type="text/babel" src="utils/database.js"></script>
+    <script type="text/babel" src="utils/currencyService.js"></script>
+    
+    <!-- 2. COMPONENTES (dependen de las utilidades) -->
+    <script type="text/babel" src="components/Sidebar.js"></script>
+    <script type="text/babel" src="components/Header.js"></script>
+    <script type="text/babel" src="components/Dashboard.js"></script>
+    <script type="text/babel" src="components/ClientManager.js"></script>
+    <script type="text/babel" src="components/ProductManager.js"></script>
+    <script type="text/babel" src="components/InvoiceManager.js"></script>
+    <script type="text/babel" src="components/InvoiceForm.js"></script>
+    <script type="text/babel" src="components/CurrencyConverter.js"></script>
+    
+    <!-- 3. APLICACIÓN PRINCIPAL (debe ir ÚLTIMO) -->
+    <script type="text/babel" src="app.js"></script>
+    
+    <!-- Script de verificación de autenticación -->
+    <script>
+        // Función para verificar autenticación
+        async function checkAuth() {
+            try {
+                console.log('Verificando autenticación...');
+                const response = await fetch('api/auth-check.php', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('Resultado autenticación:', result);
+                return result.authenticated === true;
+            } catch (error) {
+                console.error('Error en verificación de autenticación:', error);
+                return false;
+            }
+        }
+
+        // Función para cerrar sesión (para uso desde otros componentes)
+        window.logout = async function() {
+            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+                try {
+                    await fetch('api/logout.php', {
+                        credentials: 'include'
+                    });
+                    window.location.href = 'login.html';
+                } catch (error) {
+                    console.error('Error al cerrar sesión:', error);
+                    window.location.href = 'login.html';
+                }
+            }
+        }
+
+        // Verificar autenticación después de que TODO cargue
+        window.addEventListener('load', async function() {
+            console.log('Todos los scripts cargados, verificando autenticación...');
+            
+            const isAuthenticated = await checkAuth();
+            console.log('Usuario autenticado:', isAuthenticated);
+            
+            if (isAuthenticated) {
+                // Ocultar pantalla de carga
+                document.getElementById('authLoading').style.display = 'none';
+                console.log('Aplicación cargada y autenticada correctamente');
+            } else {
+                console.log('Usuario no autenticado, redirigiendo a login...');
+                window.location.href = 'login.html';
+            }
+        });
+
+        // Manejar errores globales
+        window.addEventListener('error', function(e) {
+            console.error('Error global capturado:', e.error);
+        });
+    </script>
+    
+    <!-- Script de diagnóstico -->
+    <script>
+        // Función para verificar carga de scripts
+        function checkScriptLoad() {
+            console.log("=== DIAGNÓSTICO DE CARGA ===");
+            
+            // Verificar scripts cargados
+            const scripts = [
+                'database.js', 'currencyService.js', 'Sidebar.js', 'Header.js',
+                'Dashboard.js', 'ClientManager.js', 'ProductManager.js', 
+                'InvoiceManager.js', 'InvoiceForm.js', 'CurrencyConverter.js', 'app.js'
+            ];
+            
+            scripts.forEach(script => {
+                const found = Array.from(document.scripts).some(s => s.src.includes(script));
+                console.log(script + ":", found ? "✅ Cargado" : "❌ No cargado");
+            });
+            
+            // Verificar funciones globales
+            console.log("=== FUNCIONES GLOBALES ===");
+            const functions = [
+                'createClient', 'getClients', 'updateClient', 'deleteClient',
+                'createProduct', 'getProducts', 'updateProduct', 'deleteProduct',
+                'createInvoice', 'getInvoices', 'updateInvoiceStatus', 'deleteInvoice'
+            ];
+            
+            functions.forEach(func => {
+                const available = typeof window[func] === 'function';
+                console.log(func + ":", available ? "✅ Disponible" : "❌ No disponible");
+            });
+            
+            // Verificar componentes
+            console.log("=== COMPONENTES DISPONIBLES ===");
+            console.log('Sidebar:', typeof Sidebar);
+            console.log('Header:', typeof Header);
+            console.log('Dashboard:', typeof Dashboard);
+        }
+        
+        // Ejecutar diagnóstico
+        setTimeout(checkScriptLoad, 3000);
+    </script>
+</body>
+</html>
