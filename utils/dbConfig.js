@@ -1,7 +1,7 @@
 const mariadb = require('mariadb');
 
 // ✅ SEGURO - Importar configuración desde archivo externo
-const config = require('/home/smartek/smartek/config/node-config.js');
+const config = require('../../config/node-config.js');
 
 // Pool de conexiones para MariaDB
 const pool = mariadb.createPool({
@@ -38,16 +38,16 @@ module.exports = { pool, testConnection };
 // Verificar que todas las tablas existan
 async function verifyTables(conn) {
     const requiredTables = ['clients', 'products', 'invoices', 'invoice_items'];
-    
+
     for (const table of requiredTables) {
         try {
             const result = await conn.query(`
-                SELECT COUNT(*) as count 
-                FROM information_schema.tables 
-                WHERE table_schema = 'smartek_db' 
+                SELECT COUNT(*) as count
+                FROM information_schema.tables
+                WHERE table_schema = 'smartek_db'
                 AND table_name = ?
             `, [table]);
-            
+
             if (result[0].count === 0) {
                 console.warn(`⚠️ La tabla ${table} no existe`);
                 // Aquí podrías llamar a una función para crear las tablas
@@ -69,9 +69,9 @@ async function getConnection() {
     }
 }
 
-module.exports = { 
-    pool, 
-    testConnection, 
+module.exports = {
+    pool,
+    testConnection,
     getConnection,
     verifyTables
 };
